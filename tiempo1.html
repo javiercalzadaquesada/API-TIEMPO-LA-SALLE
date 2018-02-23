@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<title>Tiempo</title>
+	</head>
+	<link rel = "stylesheet" type = "text/css" href = "tiempo.css" media="screen"/>
+	<body>
+		<div class="divTable">
+			<div class="divTableBody">
+				<div class="divTableRow">
+					<div class="divTableCell">&nbsp;
+						<table id="tiempo" width="375" height="225" border="1" background="Fondo.png" cellpadding="0" cellspacing="0">
+							<tr height="100" align="center" valign="middle">
+								<td id="icono" rowspan="2" colspan="2"style="background-repeat: no-repeat;  margin-left: auto; margin-right: auto;" />
+								<td id="hora" colspan="3" />
+							</tr>
+							<tr height="50" align="center" valign="middle">
+								<td id="fecha" colspan="3" />
+							</tr>
+							<tr id="adicional" align="center" valign="middle">
+								<td id="temperatura" width="75" />
+								<td id="humedad" width="75" />
+								<td id="pres" width="75" />
+								<td id="veloc" width="75" />
+								<td id="dirv" width="75" />
+							</tr>
+						</table>
+					</div>
+					<div class="divTableCell">&nbsp;
+						<div>
+							<select name="vistaGrafica" onChange="cambioGrafica(this);">
+								<option value="1" selected="selected">20Min</option>
+								<option value="2">1h</option>
+								<option value="3">4h</option>
+								<option value="4">8h</option>
+								<option value="5">12h</option>
+								<option value="6">Dias</option>
+							</select>
+						</div>
+						
+						<div class="divTableBody">
+							<canvas id="graficas" width="550" height="275"></canvas>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+<select name="pagina" onChange="pagina(this);">
+	<option value="1">Pagina1</option>
+	<option value="2">Pagina2</option>
+	<option value="3">Pagina3</option>
+	<option value="4">Pagina4</option>
+	<option value="5">Pagina5</option>
+	<option value="6">Pagina6</option>
+	<option value="7">Pagina7</option>
+	<option value="8">Pagina8</option>
+	<option value="9">Pagina9</option>
+	<option value="10">Pagina10</option>
+
+</select>
+</br>
+<div id="contenido">
+	<table id="tabla"class="greyGridTable"></table>
+	
+</div>
+</body>
+</html>
+<script type="text/javascript">
+rosav = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO']; // rosa de los vientos
+icono = document.getElementById("icono");
+reloj = document.getElementById("hora");
+date = document.getElementById("fecha");
+temp = document.getElementById("temperatura");
+hum = document.getElementById("humedad");
+pres= document.getElementById("pres");
+vel = document.getElementById("veloc");
+dir = document.getElementById("dirv");
+lluv = document.getElementById("lluvia");
+tiempo();
+	var salto = 20;
+	var valorActual = 0;
+	var parar = false;
+	var index = 0;
+	var index2 = 0;
+	var index3 = 0;
+	var Multiplicador = 0;
+	var valormultiplicar = 12;
+	var heightcanvas = 275;
+	var max = -50;
+	var min = 50;
+	
+//Metodo para encontrar el valor de la select
+		function cambioGrafica (sel) 
+		{
+			console.log("CambioGrafica");
+			intervalo = sel.options[sel.selectedIndex].value;
+			console.log(intervalo);
+			dibujar(intervalo);
+			
+		}
+		function tabla(datosTiempo) {
+
+			function anadirDescripcionFila(posicionJson) {
+				var th = document.createElement("th");      // TABLE HEADER.
+				th.innerHTML = posicionJson;
+				tr.appendChild(th);
+			}
+			function anadirDatoFila(i,j) {
+				var tabCell = tr.insertCell(-1);
+				if(j ==11)
+				{
+					var hora =datosTiempo[i][col[j]];
+					
+					tabCell.innerHTML ="Hora: "+ hora.substring(11, 16) +" Dia: "+ hora.substring(8, 10)+"."+ hora.substring(5, 7)+"." +hora.substring(0, 4);
+					
+				}
+				else
+				{
+					tabCell.innerHTML = datosTiempo[i][col[j]];
+				}
+				
+			}
+				var col = [];
+				for (var i = 0; i < datosTiempo.length; i++) {
+					for (var key in datosTiempo[i]) {
+						if (col.indexOf(key) === -1) {
+							col.push(key);
+						}
+					}
+				}
+
+				// CREATE DYNAMIC TABLE.
+				var tabla = document.createElement("table");
+
+				// CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+
+				var tr = tabla.insertRow(-1);                   // TABLE ROW.
+
+				
+
+				//SOLO QUIERO AÑADIR X COLUMNAS
+
+/*
+				for (var i = 0; i < col.length; i++) {
+									var th = document.createElement("th");      // TABLE HEADER.
+					th.innerHTML = col[i];
+
+					tr.appendChild(th);
+				}
+				*/
+				anadirDescripcionFila("Temp.Ambiente");
+				anadirDescripcionFila("Presion Atmosferica");
+				anadirDescripcionFila("Humedad");
+				anadirDescripcionFila("Velocidad Viento");
+				anadirDescripcionFila("Hora y Dia");
+				
+					
+				
+
+				// ESTE PRIMER FOR ES PARA TODAS LAS FILAS TOTALES (500)
+				for (var i = 0; i < datosTiempo.length; i++) {
+
+					tr = tabla.insertRow(-1);
+					
+					anadirDatoFila(i,2);
+					anadirDatoFila(i,5);
+					anadirDatoFila(i,6);
+					anadirDatoFila(i,8);
+					anadirDatoFila(i,11);
+					
+					//para dibujar todo
+					/*
+					for (var j = 0; j < col.length; j++) {
+						var tabCell = tr.insertCell(-1);
+						tabCell.innerHTML = datosTiempo[i][col[j]];
+					}
+					*/
+				}
+				// añador la tabla a la contenedora
+				var divContainer = document.getElementById("tabla");
+				divContainer.innerHTML = "";
+				divContainer.appendChild(tabla);
+				tabla.setAttribute("border", "2");
+				tabla.setAttribute("color", "#000000");
+			}
+		function pagina (sel) 
+		{
+			console.log("GeneroTabla");
+			var pagina = sel.options[sel.selectedIndex].value;
+			var tabla = document.getElementById("tabla");
+			tabla.innerHTML = "";
+			tiempoTabla(pagina);
+			tabla(objeto_json.items);
+			
+		}
+		
+		function tiempoTabla(pagina) {
+				
+				if (window.XMLHttpRequest) {
+					peticion_http = new XMLHttpRequest();
+				}
+				else if (window.ActiveXObject) { // navegadores obsoletos
+					peticion_http = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				// 2.-Preparar la funcion de respuesta
+				peticion_http.onreadystatechange = muestraContenido;
+				// 3.-Realizar peticion HTTP
+				var url = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720?page=" + pagina;
+				peticion_http.open('GET', url, true);
+				peticion_http.send(null);
+				// 4.-Respuesta del servidor
+				function muestraContenido() {
+
+					if (peticion_http.readyState == 4 && peticion_http.status == 200) { //si la peticion ha sido correcta
+
+						var respuesta_json = peticion_http.responseText; // se recoge el doc con notacion json
+
+						objeto_json = JSON.parse(respuesta_json); // se parsea el JSON
+					}
+				}
+				tabla(objeto_json.items);
+			}
+		function tiempo() {
+
+				// 1.-Instancia del objeto XMLHttpRequest
+				if (window.XMLHttpRequest) {
+					peticion_http = new XMLHttpRequest();
+				}
+				else if (window.ActiveXObject) { // navegadores obsoletos
+					peticion_http = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				// 2.-Preparar la funcion de respuesta
+				peticion_http.onreadystatechange = muestraContenido;
+				peticion_http2 = peticion_http;
+				peticion_http3 = peticion_http;
+				// 3.-Realizar peticion HTTP
+				var url1 = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720";
+				peticion_http.open('GET', url1, true);
+				peticion_http.send(null);
+				var url2 = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720?page=2";
+				peticion_http2.open('GET', url2, true);
+				peticion_http2.send(null);
+				
+				var url3 = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720?page=2";
+				peticion_http2.open('GET', url3, true);
+				peticion_http2.send(null);
+
+				// 4.-Respuesta del servidor
+				function muestraContenido() {
+
+					if (peticion_http.readyState == 4 && peticion_http.status == 200) { //si la peticion ha sido correcta
+
+						var respuesta_json = peticion_http.responseText; // se recoge el doc con notacion json
+						var respuesta_json2 = peticion_http2.responseText;
+						var respuesta_json3 = peticion_http3.responseText;
+						objeto_json = JSON.parse(respuesta_json); // se parsea el JSON
+						objeto_json2 = JSON.parse(respuesta_json2);
+						objeto_json3 = JSON.parse(respuesta_json2);
+						console.log(Object.keys(objeto_json.items).length);
+						fecha = objeto_json.items[0].reading_timestamp; //recogemos la fecha del primer elemento del JSON , que es la ultima muestra de datos
+						fecha_dia = fecha.substring(0, 10);
+						fecha = fecha_dia.substring(8, 10); //dia 
+						mes = fecha_dia.substring(5, 7); //mes
+						ano = fecha_dia.substring(0, 4); //año
+						setInterval(mueveReloj, 1);
+
+
+						date.innerHTML += fecha + "/" + mes + "/" + ano;
+						temp.innerHTML += objeto_json.items[0].ground_temp + '°C'; //temperatura
+						hum.innerHTML += objeto_json.items[0].humidity + '%'; //humedad relativa
+						pres.innerHTML += objeto_json.items[0].air_pressure + ' hPa'; //presion atmosférica
+						d1 = Math.round(parseInt(objeto_json.items[0].wind_direction) / 22.5);
+						//direccion del viento, /22.5 para la rosa de los vientos que esta en el array rosav
+						dir.innerHTML += rosav[d1];
+						vel.innerHTML += objeto_json.items[0].wind_speed + ' km/h';//velocidad viento
+						if (parseInt(objeto_json.items[0].ground_temp) <= 0 && parseInt(objeto_json.items[0].air_pressure) < 1013 && parseInt(objeto_json.items[0].humidity) > 80) {
+							icono.style.backgroundImage = "url('Nieve.png')";
+						}
+						else if (parseInt(objeto_json.items[0].air_pressure) < 1013 && parseInt(objeto_json.items[0].humidity) > 80) {
+							icono.style.backgroundImage = "url('Sol.png')";
+						}
+						else if (parseInt(objeto_json.items[0].air_pressure) < 1013 && parseInt(objeto_json.items[0].humidity) < 80) {
+							icono.style.backgroundImage = "url('Nublado.png')";
+						}
+						else if (parseInt(objeto_json.items[0].ground_temp) > 0 && parseInt(objeto_json.items[0].air_pressure) < 1013 && parseInt(objeto_json.items[0].humidity) > 80) {
+							icono.style.backgroundImage = "url('Lluvia.png')";
+						}
+						//Llamo a la creaccion de la tabla
+						tiempoTabla(1);
+						cambioGrafica(1);
+					}
+				}
+				function mueveReloj() 
+				{
+					momentoActual = new Date();
+					hora = momentoActual.getHours();
+					minuto = momentoActual.getMinutes();
+					reloj.innerHTML = hora + ":" + minuto;
+				}
+			}
+			function dibujar(opcion) {
+
+				parar = false;
+				var ctx = document.getElementById('graficas');
+				
+				var contenido = ctx.getContext('2d');
+				contenido.font = "10px Arial";
+				contenido.clearRect(0, 0, 451, heightcanvas);
+				var imagenGrafica = new Image();
+				imagenGrafica.src = 'grafica.png';
+				imagenGrafica.onload = function () {
+					
+					//Cargo la imagen en la posición
+					contenido.drawImage(imagenGrafica, 0, 0);
+
+					//Indicar el grosor de la línea
+					contenido.lineWidth = 2;
+					
+
+					//Dibujo las líneas para simular la gráfica
+
+					contenido.beginPath();
+					//Variables a defecto para no tener errores
+					
+					Multiplicador = 0;
+					//contenido.lineTo(valorActual, objeto_json.items[0].ground_temp * 4.5);
+
+
+					switch (opcion) {
+						case "1":
+							Multiplicador = 1;
+							break;
+						case "2":
+							Multiplicador = 3;
+							break;
+						case "3":
+							Multiplicador = 12;
+							break;
+						case "4":
+							Multiplicador = 24;
+							break;
+						case "5":
+							Multiplicador = 48;
+							break;
+						case "6":
+							Multiplicador = 96;
+							break;
+						default:
+							Multiplicador = 1;
+							break;
+					}
+					index = 0;
+					index2= 0;
+					index3 = 0;
+					index = Multiplicador;
+					salto = 30;
+					valorActual = 0;
+					min = 50;
+					max = -50;
+
+					
+
+
+					while (!parar) 
+					{
+						if (valorActual >= 390) 
+						{
+							parar = true;
+							contenido.fillText("Max :" + max, 5, heightcanvas - 40);
+							contenido.fillText("Min :" + min, 5, heightcanvas - 25);
+						}
+						else {
+							//dibujar primero
+							if(valorActual == 0)
+							{
+								contenido.lineTo(valorActual, heightcanvas - ( objeto_json.items[index].ground_temp * valormultiplicar));
+								contenido.fillText(objeto_json.items[index].ground_temp, valorActual, 200);
+								index = Multiplicador + index;
+								maxMin(objeto_json.items[index].ground_temp);
+							}
+							if(index > 500)
+							{
+								if(index2 == 0)
+								{
+									index2 = (index - 500);
+								}
+								else if (index2 > 500)
+								{
+									if (index3 == 0) 
+									{
+										index3 = (index2 - 500);
+									}
+									valorActual = valorActual + salto;
+									contenido.lineTo(valorActual, heightcanvas- ( objeto_json3.items[index3].ground_temp * valormultiplicar));
+									contenido.fillText(objeto_json3.items[index3].ground_temp, valorActual-3, 200);
+									index3 = Multiplicador + index3;
+									console.log(index3);
+									maxMin(objeto_json3.items[index3].ground_temp);
+								}
+								else
+								{
+									valorActual = valorActual + salto;
+									contenido.lineTo(valorActual, heightcanvas - ( objeto_json2.items[index2].ground_temp * valormultiplicar));
+									contenido.fillText(objeto_json2.items[index2].ground_temp, valorActual-3, 200);
+									maxMin();
+									index2 = Multiplicador + index2;
+									if(!index2 > 500)
+									{
+										maxMin(objeto_json2.items[index2].ground_temp);
+									}
+									console.log(index2);
+									
+								}
+								
+							}
+							else
+							{
+								valorActual = valorActual + salto;
+								contenido.lineTo(valorActual, heightcanvas - ( objeto_json.items[index].ground_temp * valormultiplicar));
+								contenido.fillText(objeto_json.items[index].ground_temp, valorActual-3, 200);
+								index = Multiplicador + index;
+								console.log(index);
+								if (!index > 500) 
+								{
+								maxMin(objeto_json.items[index].ground_temp);
+								}
+							}
+							
+						} 
+						
+					}
+					
+					contenido.strokeStyle = "hsla(333, 71%, 53%, 1)";
+					contenido.stroke();
+
+				}
+				function maxMin(numero) 
+				{
+					if(numero < min)
+					{
+						min = numero;
+					}
+					else{
+
+					}
+					if (numero > max)
+					{
+						max = numero;
+					}
+					else
+					{
+
+					}
+				}
+				
+
+// PETICION AL SERVIDOR EN SEGUNDO PLANO (AJAX)
+		
+		
+}
+
+</script>
+</div>
+</div>
+</div>
+<ul class="data-lessons">
+	<li>
+		<i class="iconentypo-download"></i>
+		<a href="http://lalaguna.lasalle.es/meteosalle/" title="MeteoSalle">Donwload prospect</a>
+	</li>
+</ul>
+</div>
+</div>
